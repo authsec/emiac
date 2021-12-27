@@ -18,4 +18,6 @@ COPY config/init.el /root/.emacs.d/
 COPY fonts/* /tmp/fonts/
 RUN unzip /tmp/fonts/Roboto_Mono.zip -d /usr/share/fonts/truetype/roboto-mono/
 
+RUN emacs --daemon --eval "(kill-emacs)"; echo "Signal OK"
+
 CMD ["emacs"]
