@@ -1,3 +1,6 @@
+(package-initialize)
+(package-refresh-contents)
+
 (setq inhibit-startup-message t) ;Don't show the start screen
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
