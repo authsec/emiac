@@ -61,10 +61,7 @@ RUN mkdir roboto-mono-nerd && \
     curl -o "Roboto Mono Nerd Font.ttf" https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/RobotoMono/Regular/complete/Roboto%20Mono%20Nerd%20Font%20Complete.ttf
 RUN fc-cache -f
 
-# Now create a nice user that we can use to base our config on
-RUN useradd -rm -d /home/emiac -s /bin/bash -g root -G sudo -u 1001 emiac
-
-
+# the user id 501 and group id 20 (dialout) map to the group ids used on 
 
 # Theoretically we can mount this location from the outside too and therefore 
 # use what we have on the host OS side.
