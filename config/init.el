@@ -1,6 +1,3 @@
-(package-initialize)
-(package-refresh-contents)
-
 (setq inhibit-startup-message t) ;Don't show the start screen
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
@@ -25,7 +22,7 @@
 (show-paren-mode 1)  ; Highlight matching brackets (or braces/parenthesis)
 
 ;; Setup a font
-(set-face-attribute 'default nil :font "Roboto Mono" :height 180)
+(set-face-attribute 'default nil :font "Roboto Mono" :height 140)
 
 ;; make backup to a designated dir, mirroring the full path
 
@@ -69,6 +66,12 @@ If the new path's directories does not exist, create them."
 (require 'use-package)
 (setq use-package-always-ensure t)
 
+(unless (package-installed-p 'quelpa)
+  (with-temp-buffer
+    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+    (eval-buffer)
+    (quelpa-self-upgrade)))
+
 (use-package org
   :custom
   (org-ellipsis " ⮷")
@@ -79,8 +82,15 @@ If the new path's directories does not exist, create them."
 	)
   )
 (require 'org)
+
 (use-package solarized-theme)
-(load-theme 'solarized-light t)
+(use-package nano-theme)
+(use-package nano-modeline)
+(use-package nano-agenda)
+(add-hook 'after-init-hook #'nano-modeline-mode)
+
+;;(load-theme 'solarized-light t)
+(load-theme 'nano-light t)
 
 (use-package all-the-icons
   :if (display-graphic-p)
@@ -117,11 +127,11 @@ If the new path's directories does not exist, create them."
   :init (ivy-rich-mode 1)
   )
 
-(use-package doom-modeline
-  :ensure t
-  :init (doom-modeline-mode 1)
-  :config (setq doom-modeline-height 15) ; Just set this below the fontsize to be as minimal as possible
-  )
+;;(use-package doom-modeline
+;;  :ensure t
+;;  :init (doom-modeline-mode 1)
+;;  :config (setq doom-modeline-height 15) ; Just set this below the fontsize to be as minimal as possible
+;;  )
 
 
 ;; enable line numbering
