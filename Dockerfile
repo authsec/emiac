@@ -1,16 +1,18 @@
-FROM authsec/sphinx:1.0.7
+FROM ubuntu:focal AS build
 
 WORKDIR /tmp
-# Install build dependencies
+# Install build dependencies (can also be used to build with gtk3 instead of the [here preferred] lucid toolkit)
 RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt -y install build-essential libgtk-3-dev libtiff5-dev libgif-dev libjpeg-dev libpng-dev libxpm-dev libncurses-dev libwebkit2gtk-4.0-dev libgnutls28-dev autoconf libxft-dev libxaw7-dev
+    DEBIAN_FRONTEND=noninteractive apt -y install curl checkinstall git texinfo install-info build-essential libgtk-3-dev libtiff5-dev libgif-dev libjpeg-dev libpng-dev libxpm-dev libncurses-dev libwebkit2gtk-4.0-dev libgnutls28-dev autoconf libxft-dev libxaw7-dev
 # Download emacs 
 RUN curl https://ftp.gnu.org/pub/gnu/emacs/emacs-27.2.tar.gz | tar xz && \
     mv emacs* emacs
 
 WORKDIR /tmp/emacs
 
-# Create emacs installer
+# Create emacs installer and make sure to use x-toolkit lucid, as gtk3 will give
+# weird rendering artifacts in conjunction with a remote X11 display like XQuartz 
+# on Mac
 RUN ./autogen.sh && \
     ./configure \
         --prefix=/usr \
@@ -40,7 +42,8 @@ RUN ./autogen.sh && \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
-    make install
+    checkinstall --install=no --default --pkgname=emacs --pkgversion="27.2" && \
+    cp emacs*.deb /emacs.deb
 
 # Create installer for latest org version
 RUN mkdir -p /tmp/org/src && \
@@ -49,7 +52,19 @@ RUN mkdir -p /tmp/org/src && \
     cd org-mode \
     && make autoloads \
     && make \
-    && make install
+    && \
+    checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" && \
+    cp emacs-org*.deb /emacs-org.deb
+
+FROM authsec/sphinx:1.0.7
+
+COPY --from=build /emacs* /tmp
+RUN ls -la /tmp
+RUN dpkg -i /tmp/emacs.deb && \
+    # We force overwrite here, as we do want the new org-version to 
+    # overwrite the old one
+    dpkg -i --force-overwrite /tmp/emacs-org.deb && \
+    rm /tmp/emacs*.deb
 
 COPY fonts/* /tmp/fonts/
 
