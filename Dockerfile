@@ -58,8 +58,11 @@ RUN mkdir -p /tmp/org/src && \
 
 FROM authsec/sphinx:1.0.7
 
+ENV EMIAC_USER=emiac
+ENV EMIAC_GROUP=dialout
+ENV EMIAC_HOME=/home/${EMIAC_USER}
+
 COPY --from=build /emacs* /tmp
-RUN ls -la /tmp
 RUN dpkg -i /tmp/emacs.deb && \
     # We force overwrite here, as we do want the new org-version to 
     # overwrite the old one
@@ -79,24 +82,40 @@ RUN fc-cache -f
 # Now create a nice user and group that we can use to base our config on
 # the user id 501 and group id 20 (dialout) map to the group ids used on 
 # a MacOS default user.
-RUN useradd -rm -d /home/emiac -s /bin/bash -g dialout -u 501 emiac
+RUN useradd -rm -d ${EMIAC_HOME} -s /bin/bash -g ${EMIAC_GROUP} -u 501 ${EMIAC_USER}
 
 # Theoretically we can mount this location from the outside too and therefore 
 # use what we have on the host OS side.
-WORKDIR /home/emiac/.emacs.d/
+WORKDIR ${EMIAC_HOME}/.emacs.d/
 COPY config/init.el .
-RUN chown -R emiac /home/emiac && \
-    chmod 0755 /home/emiac/.emacs.d/init.el
+RUN chown -R ${EMIAC_USER} ${EMIAC_HOME} && \
+    chmod 0755 ${EMIAC_HOME}/.emacs.d/init.el
+
+# Create a configuration folder for emiac where custom scripts can be
+# stored for execution before starting emacs, so e.g. the git configuration 
+# can be run before starting emacs.
+# This is typically a mount point for a configuration coming from a user
+RUN mkdir ${EMIAC_HOME}/.emiac
 
 # Run emacs as user in this container
-USER emiac
+USER ${EMIAC_USER}
+
 # Download the configuration into the container by starting emacs.
 # As this might throw errors, we signal ok with the last echo command
 RUN emacs --daemon --eval "(kill-emacs)"; echo "Signal OK"
 
+USER root
 
-# We'll map our work environment into this folder from the outside
-# so we have persistence later
-WORKDIR /home/emiac/research
+# Create bin folder where we can put our custom emiac shell script
+RUN mkdir ${EMIAC_HOME}/bin 
+COPY emiac.sh ${EMIAC_HOME}/bin
+RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}
 
-CMD ["emacs"]
+# Run emacs as user in this container
+USER ${EMIAC_USER}
+
+# We'll map our work environment into this folder by default from the outside
+# so we have persistence of our work later
+WORKDIR ${EMIAC_HOME}/research
+
+CMD ["/home/emiac/bin/emiac.sh"]
