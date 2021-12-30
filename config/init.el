@@ -1,15 +1,9 @@
+(setq emiac-home-dir "/home/emiac")
+
 (setq inhibit-startup-message t) ;Don't show the start screen
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 (setq initial-scratch-message "")
-
-;; key bindings
-(when (eq system-type 'darwin) ;; mac specific settings
-  (setq mac-command-modifier 'meta) ; Map the command key as the Meta Key, this will give a similar feel on windoze keyboards
-  (setq mac-option-modifier 'alt) ;
-  (setq mac-right-option-modifier 'none) ; Write accents/umlauts with the right option modifier
-  (setq dired-use-ls-dired nil) ; The ls command on MacOS does not support --dired
-  )
 
 (scroll-bar-mode -1) ; Disable the visible scrollbar
 (tool-bar-mode -1)    ; Disable the toolbar
@@ -21,6 +15,9 @@
 (setq visible-bell t); Setup visible bell
 (show-paren-mode 1)  ; Highlight matching brackets (or braces/parenthesis)
 
+;; Set up the key to the left of "end" to delete forward (might not be necessary if not running in a docker container on a Mac accessed through XQuartz)
+(normal-erase-is-backspace-mode 1)
+
 ;; Setup a font
 (set-face-attribute 'default nil :font "Roboto Mono" :height 140)
 
@@ -30,7 +27,7 @@
   "Return a new file path of a given file path.
 If the new path's directories does not exist, create them."
   (let* (
-	 (backupRootDir "~/.emacs.d/backup/")
+	 (backupRootDir (concat emiac-home-dir "/.emacs.d/backup/"))
 	 (filePath (replace-regexp-in-string "[A-Za-z]:" "" fpath )) ; remove Windows driver letter in path, for example, “C:”
 	 (backupFilePath (replace-regexp-in-string "//" "/" (concat backupRootDir filePath "~") ))
 	 )
@@ -66,30 +63,12 @@ If the new path's directories does not exist, create them."
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(unless (package-installed-p 'quelpa)
-  (with-temp-buffer
-    (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
-    (eval-buffer)
-    (quelpa-self-upgrade)))
-
-(use-package org
-  :custom
-  (org-ellipsis " ⮷")
-  :bind(
-	("C-c a" . org-agenda)
-	("C-c c" . org-capture)
-	("C-c l" . org-store-link)
-	)
-  )
-(require 'org)
-
-(use-package solarized-theme)
 (use-package nano-theme)
 (use-package nano-modeline)
 (use-package nano-agenda)
-(add-hook 'after-init-hook #'nano-modeline-mode)
 
-;;(load-theme 'solarized-light t)
+;; Load modeline after init, as this was causing problems if immediately loaded
+(add-hook 'after-init-hook #'nano-modeline-mode)
 (load-theme 'nano-light t)
 
 (use-package all-the-icons
@@ -126,13 +105,6 @@ If the new path's directories does not exist, create them."
 (use-package ivy-rich
   :init (ivy-rich-mode 1)
   )
-
-;;(use-package doom-modeline
-;;  :ensure t
-;;  :init (doom-modeline-mode 1)
-;;  :config (setq doom-modeline-height 15) ; Just set this below the fontsize to be as minimal as possible
-;;  )
-
 
 ;; enable line numbering
 (column-number-mode)
@@ -177,6 +149,15 @@ If the new path's directories does not exist, create them."
 (setq org-display-inline-images t)
 (setq org-redisplay-inline-images t)
 (setq org-startup-with-inline-images "inlineimages")
+(use-package org
+  :custom
+  (org-ellipsis " ⮷")
+  :bind(
+	("C-c a" . org-agenda)
+	("C-c c" . org-capture)
+	("C-c l" . org-store-link)
+	)
+  )
 ;; Store new notes at the beginning of the file
 (setq org-reverse-note-order t)
 
@@ -190,6 +171,7 @@ If the new path's directories does not exist, create them."
      (python . t)
      (shell . t)
      (sql . t)
+     (latex . t)
      )
    )
 
@@ -197,6 +179,43 @@ If the new path's directories does not exist, create them."
 
 (setq org-confirm-babel-evaluate nil)
 
+(setq org-babel-python-command "/usr/bin/python3")
+
+(use-package org-special-block-extras
+  :ensure t
+  :after org
+  :hook (org-mode . org-special-block-extras-mode)
+  ;; All relevant Lisp functions are prefixed ‘o-’; e.g., `o-docs-insert'.
+
+  :config
+  (o-defblock noteblock (title "Note") (title-color "primary")
+	      "Define noteblock export for docsy ox hugo"
+	      (apply #'concat
+		     (pcase backend
+		       (`latex `("\\begin{noteblock}", contents, "\\end{noteblock}"))
+		       (`hugo `("{{% alert title=\"", title, "\" color=\"", title-color, "\" %}}\n", contents, "\n{{% /alert %}}"))
+		       )
+		     )
+	      )
+  (o-defblock cautionblock (title "Caution") (title-color "warning")
+	      "Awesomebox caution"
+	      (apply #'concat
+		     (pcase backend
+		       (`latex `("\\begin{cautionblock}", contents, "\\end{cautionblock}"))
+		       (`hugo `("{{% alert title=\"", title, "\" color=\"", title-color, "\" %}}\n", contents, "\n{{% /alert %}}"))
+		       )
+		     )
+	      )
+  )
+
+;; (defun ox-mybackend-special-block ( special-block contents info )
+;;   (let ((org-export-current-backend 'md))
+;;          (org-hugo-special-block special-block contents info)))
+
+;;      (advice-add 'org-hugo-special-block :around
+;;       (lambda (f &rest r)
+;; 	(let ((org-export-current-backend 'hugo))
+;; 	  (apply 'f r))))
 
 (require 'org-tempo)
 (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
@@ -214,7 +233,7 @@ If the new path's directories does not exist, create them."
 (setq org-log-done 'time)
 (setq org-log-into-drawer t)
 (setq org-capture-templates
-      '(("t" "Todo" entry (file+datetree "~/research/org/tasks.org")
+      '(("t" "Todo" entry (file+olp+datetree "~/research/org/tasks.org")
 	 "* TODO %?\n  %i\n  %a")))
 
 (setq org-todo-keywords
@@ -307,37 +326,14 @@ If the new path's directories does not exist, create them."
 	    ((symbol-function 'y-or-n-p) (lambda (&rest args) t)))
     ad-do-it))
 
-(use-package org-ref
-  :after org
-  :init
-  (setq org-ref-completion-library 'org-ref-ivy-cite)
-  :bind (
-	 ;; Allows you to create a bibtex entry from a URL like a https:// link
-	 ("C-c b i" . org-ref-url-html-to-bibtex)
-	 )
-  :config
-  (setq reftex-default-bibliography '("~/research/bibliography/references.bib"))
-  (setq org-ref-bibliography-notes "~/research/bibliography/notes.org")
-  (setq org-ref-default-bibliography '("~/research/bibliography/references.bib"))
-  (setq org-ref-pdf-directory "~/research/bibliography/bibtex-pdfs/")
-  :demand t ;; Demand loading, so links work immediately
-  )
-
-(use-package org-attach-screenshot
-  :config (setq org-attach-screenshot-dirfunction
-		(lambda () 
-		  (progn (cl-assert (buffer-file-name))
-			 (concat (file-name-sans-extension (buffer-file-name))
-				 "-att")))
-		org-attach-screenshot-command-line "screencapture -i %f"))
-(require 'org-attach-screenshot)
-
 (use-package ox-hugo
   :ensure t            ;Auto-install the package from Melpa (optional)
   :after ox)
 
 (use-package toml-mode
   :ensure t)
+
+(setq hugo-base-dir "~/research/export/hugo/dump")
 
 (use-package deft
   :config
@@ -414,10 +410,14 @@ If the new path's directories does not exist, create them."
 		  ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
 
 (use-package git-auto-commit-mode)
-(setq gac-automatically-push-p t)
-(setq gac-automatically-add-new-files-p t)
+;;(setq gac-automatically-push-p t)
+;;(setq gac-automatically-add-new-files-p t)
 ;; Commit/Push every 5 minutes
-(setq gac-debounce-interval 300)
+;;(setq gac-debounce-interval 300)
+(custom-set-variables
+ '(safe-local-variable-values '((setq gac-debounce-interval 300)))
+ )
 
 (require 'ob-plantuml)
+(setq org-plantuml-jar-path "/usr/local/plantuml/plantuml.jar")
 (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
