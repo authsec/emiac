@@ -56,6 +56,10 @@ RUN mkdir -p /tmp/org/src && \
     checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" && \
     cp emacs-org*.deb /emacs-org.deb
 
+# Get the citation-style-language styles, so we can use them with the new org-mode
+RUN git clone https://github.com/citation-style-language/styles /tmp/csl/styles && \
+    git clone https://github.com/citation-style-language/locales /tmp/csl/locales
+
 FROM authsec/sphinx:1.0.7
 
 ENV EMIAC_USER=emiac
@@ -68,6 +72,11 @@ RUN dpkg -i /tmp/emacs.deb && \
     # overwrite the old one
     dpkg -i --force-overwrite /tmp/emacs-org.deb && \
     rm /tmp/emacs*.deb
+
+# Install csl styles and locales, so `#+cite_export: csl` works
+COPY --from=build /tmp/csl/styles/*.csl /usr/share/emacs/27.2/etc/org/csl/
+COPY --from=build /tmp/csl/locales/*.xml /usr/share/emacs/27.2/etc/org/csl/
+COPY --from=build /tmp/csl/locales/locales.json /usr/share/emacs/27.2/etc/org/csl/
 
 COPY fonts/* /tmp/fonts/
 
