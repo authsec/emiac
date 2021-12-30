@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Demo file for configuring additional things in emiac
+echo "Hello emiac from setup!!"
+
+cat <<EOF
+
+[EMIAC EXAMPLE SETUP INFO]
+    If you want to customize your emiac installation
+    you can create a 'setup' file in ${EMIAC_CONFIG_FOLDER}
+    and mount that file or folder into the container.
+
+EOF
+cat <<'EOF'
+    Make sure you mount the file properly and make sure you have 
+    allowed the container runtime access to that folder e.g.
+    
+    #> colima start --mount $HOME/research:w --mount $HOME/emiac_config_folder:w
+    You can then mount the folder with the run command like so:
+    
+    #> docker run -it --rm -e DISPLAY=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}'):0 -v ~/research:/home/emiac/research:rw -v ~/emiac_config_folder/setup:/home/emiac/.emiac/setup:rw authsec/emiac
+    
+    The script will be executed before 'emacs'.
+[/EMIAC EXAMPLE SETUP INFO]
+EOF
