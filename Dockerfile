@@ -123,6 +123,12 @@ RUN mkdir ${EMIAC_HOME}/bin
 COPY emiac.sh ${EMIAC_HOME}/bin
 RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}
 
+# Setup turnkey SSH keys. If the user puts `emiac_ssh_key.pub` into his `.ssh` folder
+# emiac can issue commands (initially to an MacOS shell) to open URLs and other required 
+# programs that should be reached from the guest OS on the host OS.
+COPY .ssh/ ${EMIAC_HOME}/.ssh
+RUN chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}/.ssh && chmod 0700 ${EMIAC_HOME}/.ssh
+
 # Run emacs as user in this container
 USER ${EMIAC_USER}
 

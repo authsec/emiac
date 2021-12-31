@@ -45,6 +45,10 @@ You can then mount the folder with the run command like so:
 
 #> docker run -it --rm -e DISPLAY=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}'):0 -v ~/research:/home/emiac/research:rw -v ~/emiac_config_folder/setup:/home/emiac/.emiac/setup:rw authsec/emiac
 
+If you DO want emiac to communicate with the host OS through SSH to e.g. open URLs or folders for you, you need to cat the `emiac_ssh_key.pub` to your ~/.ssh/authorized_keys file.
+
+E.g. on your mac `cat emiac_ssh_key.pub >> ~/.ssh/authorized_keys`
+
 The script will be executed before 'emacs'.
 [/EMIAC INFO]
 

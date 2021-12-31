@@ -257,7 +257,7 @@ If the new path's directories does not exist, create them."
 (org-add-link-type "x-devonthink-item" 'org-devonthink-item-open)
 (defun org-devonthink-item-open (uid)
   "Open the given uid, which is a reference to an item in Devonthink"
-  (shell-command (concat "open \"x-devonthink-item:" uid "\"")))
+  (shell-command (concat "ssh j@" (getenv "HOST_IP") " -n \"open x-devonthink-item:" uid "\"")))
 
 (setq my-roam-directory (concat (getenv "HOME") "/research/roam-notes"))
 (setq org-roam-v2-ack t)
