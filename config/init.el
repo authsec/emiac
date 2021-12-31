@@ -409,6 +409,16 @@ If the new path's directories does not exist, create them."
 		  ("\\paragraph{%s}" . "\\paragraph*{%s}")
 		  ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))))
 
+(use-package pdf-tools
+  :config
+  (pdf-tools-install t)
+  )
+
+;; Don't open .pdf files with an external viewer
+(push '("\\.pdf\\'" . emacs) org-file-apps)
+;; Don't ask if the PDF buffer should be replace with the newly created PDF
+(setq revert-without-query '(".pdf"))
+
 (use-package git-auto-commit-mode)
 ;;(setq gac-automatically-push-p t)
 ;;(setq gac-automatically-add-new-files-p t)

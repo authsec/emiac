@@ -115,6 +115,9 @@ RUN emacs --daemon --eval "(kill-emacs)"; echo "Signal OK"
 
 USER root
 
+# pdf-tools dependencies on initial install
+RUN apt update && apt install -y autoconf automake g++ gcc libpng-dev libpoppler-dev libpoppler-glib-dev libpoppler-private-dev libz-dev make pkg-config
+
 # Create bin folder where we can put our custom emiac shell script
 RUN mkdir ${EMIAC_HOME}/bin 
 COPY emiac.sh ${EMIAC_HOME}/bin
