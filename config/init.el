@@ -418,6 +418,10 @@ If the new path's directories does not exist, create them."
 (push '("\\.pdf\\'" . emacs) org-file-apps)
 ;; Don't ask if the PDF buffer should be replace with the newly created PDF
 (setq revert-without-query '(".pdf"))
+;; Set default zoom to fit the whole page
+;; http://pragmaticemacs.com/emacs/more-pdf-tools-tweaks/
+;; https://github.com/politza/pdf-tools/blob/master/lisp/pdf-view.el
+(setq-default pdf-view-display-size 'fit-page)
 
 (use-package git-auto-commit-mode)
 ;;(setq gac-automatically-push-p t)
