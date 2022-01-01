@@ -1,13 +1,13 @@
-ARG EMACS_VERSION=27.2
-
 FROM ubuntu:focal AS build
 
-ENV EMACS_VERSION=${EMACS_VERSION}
+ARG EMACS_VERSION="27.2"
+ENV EMACS_VERSION=$EMACS_VERSION
 
 WORKDIR /tmp
+
+ARG DEBIAN_FRONTEND=noninteractive
 # Install build dependencies (can also be used to build with gtk3 instead of the [here preferred] lucid toolkit)
 RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive \
     apt -y install \
         curl \
         checkinstall \
@@ -28,7 +28,7 @@ RUN apt update && \
         libxft-dev \
         libxaw7-dev
 # Download emacs 
-RUN curl https://ftp.gnu.org/pub/gnu/emacs/emacs-${EMACS_VERSION}.tar.gz | tar xz && \
+RUN curl "https://ftp.gnu.org/pub/gnu/emacs/emacs-${EMACS_VERSION}.tar.gz" | tar xz && \
     mv emacs* emacs
 
 WORKDIR /tmp/emacs
@@ -88,7 +88,6 @@ FROM authsec/sphinx:1.0.7
 ENV EMIAC_USER=emiac
 ENV EMIAC_GROUP=dialout
 ENV EMIAC_HOME=/home/${EMIAC_USER}
-ENV EMACS_VERSION=${EMACS_VERSION}
 
 COPY --from=build /emacs* /tmp
 RUN dpkg -i /tmp/emacs.deb && \
