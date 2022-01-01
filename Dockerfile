@@ -1,11 +1,34 @@
+ARG EMACS_VERSION=27.2
+
 FROM ubuntu:focal AS build
+
+ENV EMACS_VERSION=${EMACS_VERSION}
 
 WORKDIR /tmp
 # Install build dependencies (can also be used to build with gtk3 instead of the [here preferred] lucid toolkit)
 RUN apt update && \
-    DEBIAN_FRONTEND=noninteractive apt -y install curl checkinstall git texinfo install-info build-essential libgtk-3-dev libtiff5-dev libgif-dev libjpeg-dev libpng-dev libxpm-dev libncurses-dev libwebkit2gtk-4.0-dev libgnutls28-dev autoconf libxft-dev libxaw7-dev
+    DEBIAN_FRONTEND=noninteractive \
+    apt -y install \
+        curl \
+        checkinstall \
+        git \
+        texinfo \
+        install-info \
+        build-essential \
+        libgtk-3-dev \
+        libtiff5-dev \
+        libgif-dev \
+        libjpeg-dev \
+        libpng-dev \
+        libxpm-dev \
+        libncurses-dev \
+        libwebkit2gtk-4.0-dev \
+        libgnutls28-dev \
+        autoconf \
+        libxft-dev \
+        libxaw7-dev
 # Download emacs 
-RUN curl https://ftp.gnu.org/pub/gnu/emacs/emacs-27.2.tar.gz | tar xz && \
+RUN curl https://ftp.gnu.org/pub/gnu/emacs/emacs-${EMACS_VERSION}.tar.gz | tar xz && \
     mv emacs* emacs
 
 WORKDIR /tmp/emacs
@@ -42,7 +65,7 @@ RUN ./autogen.sh && \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
-    checkinstall --install=no --default --pkgname=emacs --pkgversion="27.2" && \
+    checkinstall --install=no --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
 
 # Create installer for latest org version
@@ -65,6 +88,7 @@ FROM authsec/sphinx:1.0.7
 ENV EMIAC_USER=emiac
 ENV EMIAC_GROUP=dialout
 ENV EMIAC_HOME=/home/${EMIAC_USER}
+ENV EMACS_VERSION=${EMACS_VERSION}
 
 COPY --from=build /emacs* /tmp
 RUN dpkg -i /tmp/emacs.deb && \
@@ -74,9 +98,9 @@ RUN dpkg -i /tmp/emacs.deb && \
     rm /tmp/emacs*.deb
 
 # Install csl styles and locales, so `#+cite_export: csl` works
-COPY --from=build /tmp/csl/styles/*.csl /usr/share/emacs/27.2/etc/org/csl/
-COPY --from=build /tmp/csl/locales/*.xml /usr/share/emacs/27.2/etc/org/csl/
-COPY --from=build /tmp/csl/locales/locales.json /usr/share/emacs/27.2/etc/org/csl/
+COPY --from=build /tmp/csl/styles/*.csl /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
+COPY --from=build /tmp/csl/locales/*.xml /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
+COPY --from=build /tmp/csl/locales/locales.json /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
 
 COPY fonts/* /tmp/fonts/
 
