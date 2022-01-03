@@ -138,8 +138,9 @@ RUN emacs --daemon --eval "(kill-emacs)"; echo "Signal OK"
 
 USER root
 
-# pdf-tools dependencies on initial install
-RUN apt update && apt install -y autoconf automake g++ gcc libpng-dev libpoppler-dev libpoppler-glib-dev libpoppler-private-dev libz-dev make pkg-config
+# install pdf-tools dependencies, so the server does not have to be built on 
+# initial startup of emiac
+RUN apt update && apt install -y elpa-pdf-tools-server firefox
 
 # Create bin folder where we can put our custom emiac shell script
 RUN mkdir ${EMIAC_HOME}/bin 
@@ -151,6 +152,11 @@ RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC
 # programs that should be reached from the guest OS on the host OS.
 COPY .ssh/ ${EMIAC_HOME}/.ssh
 RUN chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}/.ssh && chmod 0700 ${EMIAC_HOME}/.ssh
+
+# Install Binary Hugo Builds
+# from https://github.com/hugoguru/dist-hugo/releases
+WORKDIR /usr/local/bin
+RUN curl -L https://github.com/hugoguru/dist-hugo/releases/download/v0.91.2/hugo-extended-0.91.2-linux-$(uname -m).tar.gz | tar xz 
 
 # Run emacs as user in this container
 USER ${EMIAC_USER}
