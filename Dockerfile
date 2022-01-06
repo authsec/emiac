@@ -26,7 +26,8 @@ RUN apt update && \
         libgnutls28-dev \
         autoconf \
         libxft-dev \
-        libxaw7-dev
+        libxaw7-dev \
+        librsvg2-dev
 # Download emacs 
 RUN curl "https://ftp.gnu.org/pub/gnu/emacs/emacs-${EMACS_VERSION}.tar.gz" | tar xz && \
     mv emacs* emacs
@@ -62,6 +63,7 @@ RUN ./autogen.sh && \
         --with-jpeg=yes \
         --with-png=yes \
         --with-tiff=yes \
+        --with-rsvg \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
