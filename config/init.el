@@ -19,7 +19,7 @@
 (normal-erase-is-backspace-mode 1)
 
 ;; Setup a font
-(set-face-attribute 'default nil :font "Roboto Mono" :height 140)
+(set-face-attribute 'default nil :font "Roboto Mono" :height 120)
 
 ;; make backup to a designated dir, mirroring the full path
 
@@ -70,6 +70,102 @@ If the new path's directories does not exist, create them."
 ;; Load modeline after init, as this was causing problems if immediately loaded
 (add-hook 'after-init-hook #'nano-modeline-mode)
 (load-theme 'nano-light t)
+
+(use-package svg-tag-mode
+  :hook org-mode
+  :config
+  (require 'svg-tag-mode)
+
+  (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+  (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+  (defconst day-re "[A-Za-z]\\{3\\}")
+
+  (defun svg-progress-percent (value)
+    (svg-image (svg-lib-concat
+		(svg-lib-progress-bar (/ (string-to-number value) 100.0)
+				      nil :margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+		(svg-lib-tag (concat value "%")
+			     nil :stroke 0 :margin 0)) :ascent 'center))
+
+  (defun svg-progress-count (value)
+    (let* ((seq (mapcar #'string-to-number (split-string value "/")))
+	   (count (float (car seq)))
+	   (total (float (cadr seq))))
+      (svg-image (svg-lib-concat
+		  (svg-lib-progress-bar (/ count total) nil
+					:margin 0 :stroke 2 :radius 3 :padding 2 :width 11)
+		  (svg-lib-tag value nil
+			       :stroke 0 :margin 0)) :ascent 'center)))
+
+  (setq svg-tag-tags
+	`(
+	  ;; Org tags
+	  (":\\([A-Za-z0-9]+\\)" . ((lambda (tag) (svg-tag-make tag))))
+	  (":\\([A-Za-z0-9]+[ \-]\\)" . ((lambda (tag) tag)))
+
+	  ;; Task priority
+	  ("\\[#[A-Z]\\]" . ( (lambda (tag)
+				(svg-tag-make tag :face 'org-priority 
+					      :beg 2 :end -1 :margin 0))))
+
+	  ;; Progress
+	  ("\\(\\[[0-9]\\{1,3\\}%\\]\\)" . ((lambda (tag)
+					      (svg-progress-percent (substring tag 1 -2)))))
+	  ("\\(\\[[0-9]+/[0-9]+\\]\\)" . ((lambda (tag)
+					    (svg-progress-count (substring tag 1 -1)))))
+
+	  ;; TODO / DONE
+	  ("TODO" . ((lambda (tag) (svg-tag-make "TODO" :face 'org-todo :inverse t :margin 0 :scale 1))))
+	  ("DONE" . ((lambda (tag) (svg-tag-make "DONE" :face 'org-done :margin 0))))
+
+
+	  ;; Citation of the form [cite:@Knuth:1984] 
+	  ("\\(\\[cite:@[A-Za-z]+:\\)" . ((lambda (tag)
+					    (svg-tag-make tag
+							  :inverse t
+							  :beg 7 :end -1
+							  :crop-right t))))
+	  ("\\[cite:@[A-Za-z]+:\\([0-9]+\\]\\)" . ((lambda (tag)
+						     (svg-tag-make tag
+								   :end -1
+								   :crop-left t))))
+
+
+	  ;; Active date (without day name, with or without time)
+	  (,(format "\\(<%s>\\)" date-re) .
+	   ((lambda (tag)
+	      (svg-tag-make tag :beg 1 :end -1 :margin 0))))
+	  (,(format "\\(<%s *\\)%s>" date-re time-re) .
+	   ((lambda (tag)
+	      (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0))))
+	  (,(format "<%s *\\(%s>\\)" date-re time-re) .
+	   ((lambda (tag)
+	      (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0))))
+
+	  ;; Inactive date  (without day name, with or without time)
+	  (,(format "\\(\\[%s\\]\\)" date-re) .
+	   ((lambda (tag)
+	      (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
+	  (,(format "\\(\\[%s *\\)%s\\]" date-re time-re) .
+	   ((lambda (tag)
+	      (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0 :face 'org-date))))
+	  (,(format "\\[%s *\\(%s\\]\\)" date-re time-re) .
+	   ((lambda (tag)
+	      (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0 :face 'org-date))))))
+
+  (svg-tag-mode t)
+
+  ;; To do:         TODO DONE  
+  ;; Tags:          :TAG1:TAG2:TAG3:
+  ;; Priorities:    [#A] [#B] [#C]
+  ;; Progress:      [1/3]
+  ;;                [42%]
+  ;; Active date:   <2021-12-24>
+  ;;                <2021-12-24 14:00>
+  ;; Inactive date: [2021-12-24]
+  ;;                [2021-12-24 14:00]
+  ;; Citation:      [cite:@Knuth:1984]
+  )
 
 (use-package all-the-icons
   :if (display-graphic-p)
@@ -180,42 +276,6 @@ If the new path's directories does not exist, create them."
 (setq org-confirm-babel-evaluate nil)
 
 (setq org-babel-python-command "/usr/bin/python3")
-
-(use-package org-special-block-extras
-  :ensure t
-  :after org
-  :hook (org-mode . org-special-block-extras-mode)
-  ;; All relevant Lisp functions are prefixed ‘o-’; e.g., `o-docs-insert'.
-
-  :config
-  (o-defblock noteblock (title "Note") (title-color "primary")
-	      "Define noteblock export for docsy ox hugo"
-	      (apply #'concat
-		     (pcase backend
-		       (`latex `("\\begin{noteblock}", contents, "\\end{noteblock}"))
-		       (`hugo `("{{% alert title=\"", title, "\" color=\"", title-color, "\" %}}\n", contents, "\n{{% /alert %}}"))
-		       )
-		     )
-	      )
-  (o-defblock cautionblock (title "Caution") (title-color "warning")
-	      "Awesomebox caution"
-	      (apply #'concat
-		     (pcase backend
-		       (`latex `("\\begin{cautionblock}", contents, "\\end{cautionblock}"))
-		       (`hugo `("{{% alert title=\"", title, "\" color=\"", title-color, "\" %}}\n", contents, "\n{{% /alert %}}"))
-		       )
-		     )
-	      )
-  )
-
-;; (defun ox-mybackend-special-block ( special-block contents info )
-;;   (let ((org-export-current-backend 'md))
-;;          (org-hugo-special-block special-block contents info)))
-
-;;      (advice-add 'org-hugo-special-block :around
-;;       (lambda (f &rest r)
-;; 	(let ((org-export-current-backend 'hugo))
-;; 	  (apply 'f r))))
 
 (require 'org-tempo)
 (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
@@ -333,7 +393,7 @@ If the new path's directories does not exist, create them."
 (use-package toml-mode
   :ensure t)
 
-(setq hugo-base-dir "~/research/export/hugo/dump")
+(setq org-hugo-base-dir (concat emiac-home-dir "/research/export/hugo/dump"))
 
 (use-package deft
   :config
