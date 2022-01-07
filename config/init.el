@@ -317,7 +317,17 @@ If the new path's directories does not exist, create them."
 (org-add-link-type "x-devonthink-item" 'org-devonthink-item-open)
 (defun org-devonthink-item-open (uid)
   "Open the given uid, which is a reference to an item in Devonthink"
-  (shell-command (concat "ssh j@" (getenv "HOST_IP") " -n \"open x-devonthink-item:" uid "\"")))
+  (shell-command (concat "ssh " (getenv "HOST_USER") "@" (getenv "HOST_IP") " -n \"open x-devonthink-item:" uid "\"")))
+
+(defun browse-url-emiac-mac-host (url &optional _new-window)
+  "Communicate with the EmIAC host and open the URL in the default 
+   browser on the host.
+   The host OS here is MacOS
+  "
+  (interactive (browse-url-interactive-arg "KDE URL: "))
+  (message "Sending URL to Host OS...")
+  (apply #'start-process "name" "foo" "ssh" (concat (getenv "HOST_USER") "@" (getenv "HOST_IP")) "-n" (list (concat "open " url))))
+(setq browse-url-browser-function 'browse-url-emiac-mac-host)
 
 (setq my-roam-directory (concat (getenv "HOME") "/research/roam-notes"))
 (setq org-roam-v2-ack t)
