@@ -107,6 +107,7 @@ COPY fonts/* /tmp/fonts/
 
 WORKDIR /usr/share/fonts/truetype/
 RUN unzip /tmp/fonts/Roboto_Mono.zip -d /usr/share/fonts/truetype/roboto-mono/
+RUN unzip /tmp/fonts/Fira_Code.zip -d /usr/share/fonts/truetype/fira-code/
 
 RUN mkdir roboto-mono-nerd && \
     cd roboto-mono-nerd && \
