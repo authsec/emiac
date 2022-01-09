@@ -142,7 +142,7 @@ USER root
 
 # install pdf-tools dependencies, so the server does not have to be built on 
 # initial startup of emiac
-RUN apt update && apt install -y elpa-pdf-tools-server firefox
+RUN apt update && apt install -y elpa-pdf-tools-server firefox imagemagick
 
 # Create bin folder where we can put our custom emiac shell script
 RUN mkdir ${EMIAC_HOME}/bin 
