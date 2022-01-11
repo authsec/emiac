@@ -2,6 +2,7 @@
 emiac() {
     HOST_IP=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
     HOST_USER=${USER}
+    xhost +${HOST_IP}
     docker run -d -it --rm \
            -e DISPLAY=${HOST_IP}:0 \
            -e HOST_IP=${HOST_IP} \
