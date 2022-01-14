@@ -21,7 +21,7 @@ The function assumes the container runtime environment has been started with:
 **NOTE:** If you redo this, you need to `colima delete` first, as it seems to read from a cache somewhere, and the mount point is not applied. (This will also **delete all your downloaded images**, so don't do this if you do not have internet access to download/build the images again!!)
 
 ```
-colima start --mount $HOME/research:w --mount $HOME/coding:w
+colima start --mount $HOME/research:w --mount $HOME/coding:w --mount $HOME/emiac:w
 ```
 
 and the function also requires the [latex-styles](https://github.com/authsec/latex-styles) project to be present under `coding/github/latex-styles`, as this will be mapped into the container too, to provide a customized style (if you work on the style, you want to set it `rw` instead of `ro`).
@@ -49,7 +49,8 @@ The quick and dirty is (you need [Homebrew](https://brew.sh/)):
 ```
 #> brew install --cask xquartz
 #> brew install colima
-#> colima start --mount $HOME/research:w --mount $HOME/emiac_config_folder:w
+#> colima start --mount $HOME/research:w --mount $HOME/coding:w --mount $HOME/emiac:w
+#> open -a XQuartz
 #> docker run -it --rm -e DISPLAY=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}'):0 -v ~/research:/home/emiac/research:rw -v ~/emiac_config_folder/setup:/home/emiac/.emiac/setup:rw authsec/emiac
 ```
 
