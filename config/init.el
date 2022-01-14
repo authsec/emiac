@@ -19,7 +19,7 @@
 (normal-erase-is-backspace-mode 1)
 
 ;; Setup a font
-(set-face-attribute 'default nil :font "Roboto Mono" :height 120)
+(set-face-attribute 'default nil :font "Roboto Mono" :height 130)
 
 ;; make backup to a designated dir, mirroring the full path
 
