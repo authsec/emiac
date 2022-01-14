@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#EMIAC_HOME="/home/emiac"
+LOG_PREFIX="[EMIAC_SCAFFOLDING]"
+SCAFFOLDING_BASE_DIR="${EMIAC_HOME}/research"
+EMIAC_CONFIG_DIR="${EMIAC_HOME}/.emiac"
+DEFAULTS_CONFIG_DIR="${EMIAC_CONFIG_DIR}/defaults"
+
+DEFAULT_BIBLIOGRAPHY="${DEFAULTS_CONFIG_DIR}/references.bib"
+
+echo "${LOG_PREFIX} Initializing"
+# ensure basic scaffolding
+cd ${SCAFFOLDING_BASE_DIR}
+mkdir -p {export/{pdf,hugo},org,bibliography,roam-notes}
+
+# Set up a default references file
+cp ${DEFAULT_BIBLIOGRAPHY} ${SCAFFOLDING_BASE_DIR}/bibliography/
+
+# For the next time signal that emiac is already initialized
+# If there is more than one date line, emiac has been initialized twice somehow
+echo $(date) >> ${EMIAC_CONFIG_DIR}/.initialized
+echo "${LOG_PREFIX} Initialized"

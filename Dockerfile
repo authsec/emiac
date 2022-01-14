@@ -85,11 +85,16 @@ RUN mkdir -p /tmp/org/src && \
 RUN git clone https://github.com/citation-style-language/styles /tmp/csl/styles && \
     git clone https://github.com/citation-style-language/locales /tmp/csl/locales
 
+# Clone authsec styles into the image
+RUN git clone https://github.com/authsec/latex-styles.git /tmp/latex-styles
+
 FROM authsec/sphinx:1.0.7
 
 ENV EMIAC_USER=emiac
 ENV EMIAC_GROUP=dialout
 ENV EMIAC_HOME=/home/${EMIAC_USER}
+ENV EMIAC_CONFIG_DIR=${EMIAC_HOME}/.emiac
+ENV EMACS_VERSION=$EMACS_VERSION
 
 COPY --from=build /emacs* /tmp
 RUN dpkg -i /tmp/emacs.deb && \
@@ -102,6 +107,11 @@ RUN dpkg -i /tmp/emacs.deb && \
 COPY --from=build /tmp/csl/styles/*.csl /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
 COPY --from=build /tmp/csl/locales/*.xml /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
 COPY --from=build /tmp/csl/locales/locales.json /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
+
+# Install style directly into image. This can be overridden/extended by mounting an additional style
+# file directory into the container on /home/emiac/texmf/tex/latex/commonstuff
+COPY --from=build /tmp/latex-styles/*.sty /usr/share/texlive/texmf-dist/tex/latex/authsec/
+RUN texhash
 
 COPY fonts/* /tmp/fonts/
 
@@ -130,7 +140,9 @@ RUN chown -R ${EMIAC_USER} ${EMIAC_HOME} && \
 # stored for execution before starting emacs, so e.g. the git configuration 
 # can be run before starting emacs.
 # This is typically a mount point for a configuration coming from a user
-RUN mkdir ${EMIAC_HOME}/.emiac
+RUN mkdir ${EMIAC_CONFIG_DIR}
+COPY config/defaults/ ${EMIAC_CONFIG_DIR}/defaults
+RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}
 
 # Run emacs as user in this container
 USER ${EMIAC_USER}
@@ -146,9 +158,12 @@ USER root
 RUN apt update && apt install -y elpa-pdf-tools-server firefox imagemagick
 
 # Create bin folder where we can put our custom emiac shell script
-RUN mkdir ${EMIAC_HOME}/bin 
-COPY emiac.sh ${EMIAC_HOME}/bin
+# Create research folder where the user stuff will end up
+RUN mkdir ${EMIAC_HOME}/bin ${EMIAC_HOME}/research
+COPY emiac.sh create_scaffolding ${EMIAC_HOME}/bin
 RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}
+
+#RUN mkdir ${EMIAC_HOME}/research && chmod -R 0755 ${EMIAC_HOME}/research && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}/research
 
 # Setup turnkey SSH keys. If the user puts `emiac_ssh_key.pub` into his `.ssh` folder
 # emiac can issue commands (initially to an MacOS shell) to open URLs and other required 
