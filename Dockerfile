@@ -76,7 +76,7 @@ RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git
 WORKDIR /tmp/org/src/org-mode
 RUN make autoloads
 RUN make 
-RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
+RUN checkinstall -D --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
 RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
