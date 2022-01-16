@@ -71,15 +71,13 @@ RUN ./autogen.sh && \
     cp emacs*.deb /emacs.deb
 
 # Create installer for latest org version
-RUN mkdir -p /tmp/org/src && \
-    cd /tmp/org/src && \
-    git clone https://git.savannah.gnu.org/git/emacs/org-mode.git && \
-    cd org-mode \
-    && make autoloads \
-    && make \
-    && \
-    checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" && \
-    cp emacs-org*.deb /emacs-org.deb
+WORKDIR /tmp/org/src 
+RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git 
+WORKDIR /tmp/org/src/org-mode
+RUN make autoloads
+RUN make 
+RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
+RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
 RUN git clone https://github.com/citation-style-language/styles /tmp/csl/styles && \
