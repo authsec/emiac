@@ -12,12 +12,6 @@ if [ "${EMIAC_EXTERNALIZE_CONFIGURATION}" == "1" ]
 then
     echo "Setting up with externalized configuration"
     export EMIAC_USER_INIT_DIR="${EMIAC_RESEARCH_DIR}/.emacs.d"
-
-    if [ ! -f "${EMIAC_USER_INIT_DIR}/init.el" ]
-    then
-        echo " Missing user configuration, copying one from default"
-        cp ${EMIAC_CONFIG_DEFAULTS_DIR}/init.el ${EMIAC_USER_INIT_DIR}
-    fi
 fi
 
 if [ ! -f "${EMIAC_CONFIG_DIR}/.initialized" ]
@@ -80,6 +74,11 @@ EOF
 # no longer work!!
 fi
 
-echo "[EMIAC] Starting emacs ..."
+if [ ! -f "${EMIAC_USER_INIT_DIR}/init.el" ]
+then
+    echo " Missing user configuration, copying one from default"
+    cp ${EMIAC_CONFIG_DEFAULTS_DIR}/init.el ${EMIAC_USER_INIT_DIR}
+fi
 
+echo "[EMIAC] Starting emacs ..."
 emacs -q --load ${EMIAC_INIT_FILE} -T "EmIAC - Research Environment"

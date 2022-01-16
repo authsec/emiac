@@ -41,3 +41,20 @@ emiac-dev2() {
            -v ~/emiac/re2:/home/emiac/research:rw \
            authsec/emiac:dev
 }
+
+# Required for finder to open files.
+emiac-dev3() {
+    HOST_IP=$(ifconfig en0 | grep inet | awk '$1=="inet" {print $2}')
+    HOST_USER=${USER}
+    HOST_RESEARCH_DIR="${HOME}/emiac/re3"
+    xhost +${HOST_IP}
+    docker run -d -it --rm --name emiac-dev3 \
+           -e DISPLAY=${HOST_IP}:0 \
+           -e HOST_IP=${HOST_IP} \
+           -e HOST_USER=${HOST_USER} \
+           -e HOST_RESEARCH_DIR=${HOST_RESEARCH_DIR} \
+           -e EMIAC_EXTERNALIZE_CONFIGURATION=1 \
+           -p1316:1313 \
+           -v ${HOST_RESEARCH_FOLDER}:/home/emiac/research:rw \
+           authsec/emiac:dev
+}

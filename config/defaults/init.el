@@ -53,6 +53,13 @@ If the new path's directories does not exist, create them."
 (setq recentf-max-saved-items 25)
 (global-set-key "\C-x\ \C-r" 'recentf-open-files)
 
+(defun as/open-in-finder ()
+      (interactive)
+      (shell-command
+       (concat "ssh " (getenv "HOST_USER") "@" (getenv "HOST_IP")
+	       " -n \"open -R " (getenv "HOST_RESEARCH_DIR") (s-replace  (format "%s" (getenv "EMIAC_RESEARCH_DIR")) "" (format "%s" buffer-file-name)) "\""
+)))
+
 ;; Initialize package source
 (require 'package)
 

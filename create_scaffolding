@@ -10,16 +10,22 @@ DEFAULT_BIBLIOGRAPHY="${EMIAC_CONFIG_DEFAULTS_DIR}/references.bib"
 DEFAULT_INIT_EL="${EMIAC_CONFIG_DEFAULTS_DIR}/init.el"
 
 echo "${LOG_PREFIX} Initializing"
+
 # ensure basic scaffolding
 cd ${SCAFFOLDING_BASE_DIR}
+echo "${LOG_PREFIX} Creating basic scaffolding in $(pwd)"
 mkdir -p {.emacs.d,.emiac,export/{pdf,hugo},org,bibliography,roam-notes}
 
 # Create basic tasks file
+echo "${LOG_PREFIX} Touching tasks file"
 touch org/tasks.org
 
 # Set up a default references file
+echo "${LOG_PREFIX} Copying an initial bibliography to ${SCAFFOLDING_BASE_DIR}/bibliography/"
 cp ${DEFAULT_BIBLIOGRAPHY} ${SCAFFOLDING_BASE_DIR}/bibliography/
+
 # Setup default init.el file
+echo "${LOG_PREFIX} Copying an initial init file to ${SCAFFOLDING_BASE_DIR}/.emacs.d/"
 cp ${DEFAULT_INIT_EL} ${SCAFFOLDING_BASE_DIR}/.emacs.d/
 
 
