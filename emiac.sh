@@ -4,18 +4,30 @@ EMIAC_BIN_DIR="${EMIAC_HOME}/bin"
 SCAFFOLDING_BASE_DIR="${EMIAC_HOME}/research"
 EMIAC_CONFIG_DIR="${SCAFFOLDING_BASE_DIR}/.emiac"
 
+# ENVIRONMENT PROVIDED BY DOCKER IMAGE
+# EMIAC_INIT_FILE
+# EMIAC_EXTERNALIZED_CONFIGURATION_DIR
+
+if [ "${EMIAC_EXTERNALIZE_CONFIGURATION}" == "1" ]
+then
+    echo "Setting up with externalized configuration"
+    export EMIAC_USER_INIT_DIR="${EMIAC_RESEARCH_DIR}/.emacs.d"
+
+    if [ ! -f "${EMIAC_USER_INIT_DIR}/init.el" ]
+    then
+        echo " Missing user configuration, copying one from default"
+        cp ${EMIAC_CONFIG_DEFAULTS_DIR}/init.el ${EMIAC_USER_INIT_DIR}
+    fi
+fi
+
 if [ ! -f "${EMIAC_CONFIG_DIR}/.initialized" ]
 then
-echo "XXX ID $(id)"
-echo "XXX DIr $(ls -la)"
-echo "[EMIAC INFO] Detected empty scaffolding, setting it up for you ..."
-${EMIAC_BIN_DIR}/create_scaffolding
-
+    echo "[EMIAC INFO] Detected empty scaffolding, setting it up for you ..."
+    ${EMIAC_BIN_DIR}/create_scaffolding
 fi
 
 if [ -f "${EMIAC_CONFIG_DIR}/setup" ]
 then
-
 cat <<'EOF'
 [EMIAC INFO]
     Running custom setup file ...
@@ -69,4 +81,5 @@ EOF
 fi
 
 echo "[EMIAC] Starting emacs ..."
-emacs
+
+emacs -q --load ${EMIAC_INIT_FILE} -T "EmIAC - Research Environment"

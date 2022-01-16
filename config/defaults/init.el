@@ -1,4 +1,4 @@
-(setq emiac-home-dir "/home/emiac")
+(setq emiac-project-dir "/home/emiac/research")
 
 (setq inhibit-startup-message t) ;Don't show the start screen
 (setq inhibit-splash-screen t)
@@ -19,7 +19,13 @@
 (normal-erase-is-backspace-mode 1)
 
 ;; Setup a font
-(set-face-attribute 'default nil :font "Roboto Mono" :height 130)
+(set-face-attribute 'default nil :font "Roboto Mono" :height 135)
+
+;; scroll one line at a time (less "jumpy" than defaults)
+(setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time    
+(setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
+(setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
+(setq scroll-step 1) ;; keyboard scroll one line at a time
 
 ;; make backup to a designated dir, mirroring the full path
 
@@ -27,7 +33,7 @@
   "Return a new file path of a given file path.
 If the new path's directories does not exist, create them."
   (let* (
-	 (backupRootDir (concat emiac-home-dir "/.emacs.d/backup/"))
+	 (backupRootDir (concat emiac-project-dir "/.emacs.d/backup/"))
 	 (filePath (replace-regexp-in-string "[A-Za-z]:" "" fpath )) ; remove Windows driver letter in path, for example, “C:”
 	 (backupFilePath (replace-regexp-in-string "//" "/" (concat backupRootDir filePath "~") ))
 	 )
@@ -68,7 +74,8 @@ If the new path's directories does not exist, create them."
 (use-package nano-agenda)
 
 ;; Load modeline after init, as this was causing problems if immediately loaded
-(add-hook 'after-init-hook #'nano-modeline-mode)
+;; This is too early (add-hook 'after-init-hook #'nano-modeline-mode)
+(add-hook 'emacs-startup-hook #'nano-modeline-mode)
 (load-theme 'nano-light t)
 
 (use-package svg-tag-mode
@@ -257,6 +264,8 @@ If the new path's directories does not exist, create them."
 ;; Store new notes at the beginning of the file
 (setq org-reverse-note-order t)
 
+(org-indent-mode 1)
+
 (with-eval-after-load 'org
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -403,7 +412,7 @@ If the new path's directories does not exist, create them."
 (use-package toml-mode
   :ensure t)
 
-(setq org-hugo-base-dir (concat emiac-home-dir "/research/export/hugo/dump"))
+(setq org-hugo-base-dir (concat emiac-project-dir "/export/hugo/dump"))
 
 (use-package deft
   :config
@@ -415,9 +424,9 @@ If the new path's directories does not exist, create them."
   ("C-c n s" . deft))
 
 (setq org-latex-pdf-process
-      (list
-       "latexmk -interaction=nonstopmode -shell-escape -pdf -f %b.tex && latexmk -c -bibtex && rm -rf %b.run.xml %b.tex %b.bbl _minted-*"
-       ))
+	  (list
+	   "latexmk -interaction=nonstopmode -shell-escape -pdf -f %b.tex && latexmk -c -bibtex && rm -rf %b.run.xml %b.tex %b.bbl _minted-*; mkdir ~/research/export/pdf/$(/usr/bin/date -I)-%b; cp %b.pdf ~/research/export/pdf/$(/usr/bin/date -I)-%b"
+	   ))
 
 (setq org-latex-listings 'minted
       org-latex-packages-alist '(("" "minted"))

@@ -3,18 +3,25 @@
 #EMIAC_HOME="/home/emiac"
 LOG_PREFIX="[EMIAC_SCAFFOLDING]"
 SCAFFOLDING_BASE_DIR="${EMIAC_HOME}/research"
-EMIAC_CONFIG_DIR="${EMIAC_HOME}/.emiac"
-DEFAULTS_CONFIG_DIR="${EMIAC_CONFIG_DIR}/defaults"
+#EMIAC_CONFIG_DIR="${EMIAC_HOME}/.emiac"
+#DEFAULTS_CONFIG_DIR="${EMIAC_CONFIG_DIR}/defaults"
 
-DEFAULT_BIBLIOGRAPHY="${DEFAULTS_CONFIG_DIR}/references.bib"
+DEFAULT_BIBLIOGRAPHY="${EMIAC_CONFIG_DEFAULTS_DIR}/references.bib"
+DEFAULT_INIT_EL="${EMIAC_CONFIG_DEFAULTS_DIR}/init.el"
 
 echo "${LOG_PREFIX} Initializing"
 # ensure basic scaffolding
 cd ${SCAFFOLDING_BASE_DIR}
-mkdir -p {export/{pdf,hugo},org,bibliography,roam-notes}
+mkdir -p {.emacs.d,.emiac,export/{pdf,hugo},org,bibliography,roam-notes}
+
+# Create basic tasks file
+touch org/tasks.org
 
 # Set up a default references file
 cp ${DEFAULT_BIBLIOGRAPHY} ${SCAFFOLDING_BASE_DIR}/bibliography/
+# Setup default init.el file
+cp ${DEFAULT_INIT_EL} ${SCAFFOLDING_BASE_DIR}/.emacs.d/
+
 
 # For the next time signal that emiac is already initialized
 # If there is more than one date line, emiac has been initialized twice somehow

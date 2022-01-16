@@ -88,14 +88,24 @@ RUN git clone https://github.com/citation-style-language/styles /tmp/csl/styles 
 # Clone authsec styles into the image
 RUN git clone https://github.com/authsec/latex-styles.git /tmp/latex-styles
 
+# Clone all the icons into font directory, so they do not have to be downloaded
+RUN git clone https://github.com/domtronn/all-the-icons.el.git /tmp/all-the-icons
+
 FROM authsec/sphinx:1.0.7
 
 ENV EMIAC_USER=emiac
 ENV EMIAC_GROUP=dialout
 ENV EMIAC_HOME=/home/${EMIAC_USER}
 ENV EMIAC_CONFIG_DIR=${EMIAC_HOME}/.emiac
+ENV EMIAC_CONFIG_DEFAULTS_DIR=${EMIAC_CONFIG_DIR}/defaults
+ENV EMIAC_INIT_FILE=${EMIAC_CONFIG_DIR}/emiac.el
+ENV EMIAC_USER_INIT_DIR=${EMIAC_HOME}/.emacs.d
 ENV EMACS_VERSION=$EMACS_VERSION
-
+ENV EMIAC_RESEARCH_DIR=${EMIAC_HOME}/research
+# If set to 1 the user configuration should be taken from inside .emacs.d
+# of the mounted research folder.
+ENV EMIAC_EXTERNALIZE_CONFIGURATION=${EMIAC_EXTERNALIZE_CONFIGURATION:-0}
+    
 COPY --from=build /emacs* /tmp
 RUN dpkg -i /tmp/emacs.deb && \
     # We force overwrite here, as we do want the new org-version to 
@@ -113,6 +123,9 @@ COPY --from=build /tmp/csl/locales/locales.json /usr/share/emacs/${EMACS_VERSION
 COPY --from=build /tmp/latex-styles/*.sty /usr/share/texlive/texmf-dist/tex/latex/authsec/
 RUN texhash
 
+# Setup Fonts
+# The all the icons package installs to this location
+COPY --from=build /tmp/all-the-icons/fonts/*.ttf /home/emiac/.local/share/fonts/
 COPY fonts/* /tmp/fonts/
 
 WORKDIR /usr/share/fonts/truetype/
@@ -129,39 +142,41 @@ RUN fc-cache -f
 # a MacOS default user.
 RUN useradd -rm -d ${EMIAC_HOME} -s /bin/bash -g ${EMIAC_GROUP} -u 501 ${EMIAC_USER}
 
+# Create bin folder where we can put our custom emiac shell script
+# Create research folder where the user stuff will end up
+RUN mkdir ${EMIAC_HOME}/bin ${EMIAC_RESEARCH_DIR}
+COPY emiac.sh create_scaffolding ${EMIAC_HOME}/bin
+RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}
+
 # Theoretically we can mount this location from the outside too and therefore 
 # use what we have on the host OS side.
 WORKDIR ${EMIAC_HOME}/.emacs.d/
-COPY config/init.el .
-RUN chown -R ${EMIAC_USER} ${EMIAC_HOME} && \
-    chmod 0755 ${EMIAC_HOME}/.emacs.d/init.el
+# Copy to a different name here, so emacs doesn't find a expected file here by default
+COPY config/defaults/init.el ./emiac-init.el
+RUN chown -R ${EMIAC_USER} ${EMIAC_HOME} 
 
 # Create a configuration folder for emiac where custom scripts can be
 # stored for execution before starting emacs, so e.g. the git configuration 
 # can be run before starting emacs.
 # This is typically a mount point for a configuration coming from a user
-RUN mkdir ${EMIAC_CONFIG_DIR}
-COPY config/defaults/ ${EMIAC_CONFIG_DIR}/defaults
+COPY config/emiac.el ${EMIAC_CONFIG_DIR}/
+# Copy default configurations
+COPY config/defaults/ ${EMIAC_CONFIG_DEFAULTS_DIR}/
 RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}
 
 # Run emacs as user in this container
 USER ${EMIAC_USER}
 
-# Download the configuration into the container by starting emacs.
+# Download the full configuration into the container by starting emacs.
 # As this might throw errors, we signal ok with the last echo command
-RUN emacs --daemon --eval "(kill-emacs)"; echo "Signal OK"
+RUN emacs -q --load ${EMIAC_INIT_FILE} --daemon --eval "(emacsql-sqlite-compile) (kill-emacs)"; echo "Signal OK"
+
 
 USER root
 
 # install pdf-tools dependencies, so the server does not have to be built on 
 # initial startup of emiac
 RUN apt update && apt install -y elpa-pdf-tools-server firefox imagemagick
-
-# Create bin folder where we can put our custom emiac shell script
-# Create research folder where the user stuff will end up
-RUN mkdir ${EMIAC_HOME}/bin ${EMIAC_HOME}/research
-COPY emiac.sh create_scaffolding ${EMIAC_HOME}/bin
-RUN chmod -R 0755 ${EMIAC_HOME} && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}
 
 #RUN mkdir ${EMIAC_HOME}/research && chmod -R 0755 ${EMIAC_HOME}/research && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}/research
 
@@ -176,11 +191,14 @@ RUN chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}/.ssh && chmod 0700 ${EMI
 WORKDIR /usr/local/bin
 RUN curl -L https://github.com/hugoguru/dist-hugo/releases/download/v0.91.2/hugo-extended-0.91.2-linux-$(uname -m).tar.gz | tar xz 
 
+# Cleanup
+RUN rm -rf /tmp/*
+
 # Run emacs as user in this container
 USER ${EMIAC_USER}
 
 # We'll map our work environment into this folder by default from the outside
 # so we have persistence of our work later
-WORKDIR ${EMIAC_HOME}/research
+WORKDIR ${EMIAC_RESEARCH_DIR}
 
 CMD ["/home/emiac/bin/emiac.sh"]
