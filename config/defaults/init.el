@@ -1,4 +1,4 @@
-(setq emiac-project-dir "/home/emiac/research")
+(setq emiac-project-dir (getenv "EMIAC_RESEARCH_DIR"))
 
 (setq inhibit-startup-message t) ;Don't show the start screen
 (setq inhibit-splash-screen t)
