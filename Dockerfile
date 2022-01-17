@@ -91,9 +91,12 @@ RUN git clone https://github.com/domtronn/all-the-icons.el.git /tmp/all-the-icon
 
 FROM authsec/sphinx:1.0.7
 
+# Setup environment used in docker build and scripts
+# running in the container itself.
 ENV EMIAC_USER=emiac
 ENV EMIAC_GROUP=dialout
 ENV EMIAC_HOME=/home/${EMIAC_USER}
+ENV EMIAC_BIN_DIR=${EMIAC_HOME}/bin
 ENV EMIAC_CONFIG_DIR=${EMIAC_HOME}/.emiac
 ENV EMIAC_CONFIG_DEFAULTS_DIR=${EMIAC_CONFIG_DIR}/defaults
 ENV EMIAC_INIT_FILE=${EMIAC_CONFIG_DIR}/emiac.el

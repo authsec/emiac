@@ -1,32 +1,38 @@
 #!/bin/bash
+# This script ensures that you do have a basic folder structure available
+# that the runtime environment can expect to be present.
 
-#EMIAC_HOME="/home/emiac"
-LOG_PREFIX="[EMIAC_SCAFFOLDING]"
-SCAFFOLDING_BASE_DIR="${EMIAC_HOME}/research"
-#EMIAC_CONFIG_DIR="${EMIAC_HOME}/.emiac"
-#DEFAULTS_CONFIG_DIR="${EMIAC_CONFIG_DIR}/defaults"
+LOG_PREFIX="[SCAFFOLDING]"
 
 DEFAULT_BIBLIOGRAPHY="${EMIAC_CONFIG_DEFAULTS_DIR}/references.bib"
 DEFAULT_INIT_EL="${EMIAC_CONFIG_DEFAULTS_DIR}/init.el"
 
+# Check if the script was already executed in the past and avoid running it again
+if [ -f "${EMIAC_CONFIG_DIR}/.initialized" ]
+then
+    echo "${LOG_PREFIX} System already initialized, skipping ..."
+    exit 1
+fi
+
 echo "${LOG_PREFIX} Initializing"
 
 # ensure basic scaffolding
-cd ${SCAFFOLDING_BASE_DIR}
+cd ${EMIAC_RESEARCH_DIR}
 echo "${LOG_PREFIX} Creating basic scaffolding in $(pwd)"
-mkdir -p {.emacs.d,.emiac,export/{pdf,hugo},org,bibliography,roam-notes}
+mkdir -p {.emiac,export/{pdf,hugo},org,bibliography,roam-notes}
 
 # Create basic tasks file
 echo "${LOG_PREFIX} Touching tasks file"
 touch org/tasks.org
 
 # Set up a default references file
-echo "${LOG_PREFIX} Copying an initial bibliography to ${SCAFFOLDING_BASE_DIR}/bibliography/"
-cp ${DEFAULT_BIBLIOGRAPHY} ${SCAFFOLDING_BASE_DIR}/bibliography/
+echo "${LOG_PREFIX} Copying an initial bibliography to ${EMIAC_RESEARCH_DIR}/bibliography/"
+cp ${DEFAULT_BIBLIOGRAPHY} ${EMIAC_RESEARCH_DIR}/bibliography/
 
-# Setup default init.el file
-echo "${LOG_PREFIX} Copying an initial init file to ${SCAFFOLDING_BASE_DIR}/.emacs.d/"
-cp ${DEFAULT_INIT_EL} ${SCAFFOLDING_BASE_DIR}/.emacs.d/
+# Setup default init.el file (although this would only be used if externalized configuration is requested)
+# This will however give the user a good starting point 
+# echo "${LOG_PREFIX} Copying an initial init file to ${EMIAC_RESEARCH_DIR}/.emacs.d/"
+# cp ${DEFAULT_INIT_EL} ${EMIAC_RESEARCH_DIR}/.emacs.d/
 
 
 # For the next time signal that emiac is already initialized

@@ -1,24 +1,18 @@
 #!/bin/bash
 
-EMIAC_BIN_DIR="${EMIAC_HOME}/bin"
-SCAFFOLDING_BASE_DIR="${EMIAC_HOME}/research"
-EMIAC_CONFIG_DIR="${SCAFFOLDING_BASE_DIR}/.emiac"
-
-# ENVIRONMENT PROVIDED BY DOCKER IMAGE
-# EMIAC_INIT_FILE
-# EMIAC_EXTERNALIZED_CONFIGURATION_DIR
+# ENVIRONMENT VARIABLES PROVIDED BY DOCKER IMAGE
 
 if [ "${EMIAC_EXTERNALIZE_CONFIGURATION}" == "1" ]
 then
     echo "Setting up with externalized configuration"
     export EMIAC_USER_INIT_DIR="${EMIAC_RESEARCH_DIR}/.emacs.d"
+    export EMIAC_CONFIG_DIR="${EMIAC_RESEARCH_DIR}/.emiac"
 fi
 
-if [ ! -f "${EMIAC_CONFIG_DIR}/.initialized" ]
-then
-    echo "[EMIAC INFO] Detected empty scaffolding, setting it up for you ..."
-    ${EMIAC_BIN_DIR}/create_scaffolding
-fi
+# Initialize directory structure if required
+${EMIAC_BIN_DIR}/create_scaffolding
+
+
 
 if [ -f "${EMIAC_CONFIG_DIR}/setup" ]
 then
@@ -76,6 +70,8 @@ fi
 
 if [ ! -f "${EMIAC_USER_INIT_DIR}/init.el" ]
 then
+    # Make sure directory is present
+    mkdir -p ${EMIAC_USER_INIT_DIR}
     echo " Missing user configuration, copying one from default"
     cp ${EMIAC_CONFIG_DEFAULTS_DIR}/init.el ${EMIAC_USER_INIT_DIR}
 fi
