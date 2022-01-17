@@ -67,7 +67,7 @@ RUN ./autogen.sh && \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
-    checkinstall --install=no --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
+    checkinstall --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
 
 # Create installer for latest org version
