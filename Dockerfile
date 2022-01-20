@@ -67,7 +67,7 @@ RUN ./autogen.sh && \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
-    checkinstall --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
+    checkinstall --install=no --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
 
 # Create installer for latest org version
@@ -89,7 +89,7 @@ RUN git clone https://github.com/authsec/latex-styles.git /tmp/latex-styles
 # Clone all the icons into font directory, so they do not have to be downloaded
 RUN git clone https://github.com/domtronn/all-the-icons.el.git /tmp/all-the-icons
 
-FROM authsec/sphinx:1.0.7
+FROM authsec/sphinx:latest
 
 # Setup environment used in docker build and scripts
 # running in the container itself.
