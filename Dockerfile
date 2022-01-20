@@ -75,8 +75,9 @@ WORKDIR /emiac/org/src
 RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git 
 WORKDIR /emiac/org/src/org-mode
 RUN make autoloads
-RUN make 
-RUN checkinstall -D --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
+RUN make
+# Hack in realpath as shell function, as the github build won't take the real one 
+RUN realpath(){ python -c "import os.path; print os.path.relpath('$1','${2:-$PWD}')" ; } && checkinstall -D --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
 RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
