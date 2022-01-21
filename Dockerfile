@@ -38,7 +38,7 @@ RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git
 WORKDIR /emiac/org/src/org-mode
 RUN make autoloads
 RUN make
-RUN checkinstall -D --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
+RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
 RUN cp emacs-org*.deb /emacs-org.deb
 
 WORKDIR /tmp
@@ -113,6 +113,7 @@ ENV EMIAC_RESEARCH_DIR=${EMIAC_HOME}/research
 # If set to 1 the user configuration should be taken from inside .emacs.d
 # of the mounted research folder.
 ENV EMIAC_EXTERNALIZE_CONFIGURATION=${EMIAC_EXTERNALIZE_CONFIGURATION:-0}
+ENV HUGO_VERSION=0.92.0
     
 COPY --from=build /emacs* /tmp
 RUN dpkg -i /tmp/emacs.deb && \
@@ -195,7 +196,7 @@ RUN chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}/.ssh && chmod 0700 ${EMI
 # Install Binary Hugo Builds
 # from https://github.com/hugoguru/dist-hugo/releases
 WORKDIR /usr/local/bin
-RUN curl -L https://github.com/hugoguru/dist-hugo/releases/download/v0.91.2/hugo-extended-0.91.2-linux-$(uname -m).tar.gz | tar xz 
+RUN curl -L https://github.com/hugoguru/dist-hugo/releases/download/v${HUGO_VERSION}/hugo-extended-${HUGO_VERSION}-linux-$(uname -m).tar.gz | tar xz 
 
 # Cleanup
 RUN rm -rf /tmp/*
