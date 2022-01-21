@@ -39,11 +39,13 @@ RUN make
 RUN checkinstall -D --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
 RUN cp emacs-org*.deb /emacs-org.deb
 
-WORKDIR /tmp/emacs
+WORKDIR /tmp
 
 # Download emacs 
 RUN curl "https://ftp.gnu.org/pub/gnu/emacs/emacs-${EMACS_VERSION}.tar.gz" | tar xz && \
     mv emacs* emacs
+
+WORKDIR /tmp/emacs
 
 # Create emacs installer and make sure to use x-toolkit lucid, as gtk3 will give
 # weird rendering artifacts in conjunction with a remote X11 display like XQuartz 
