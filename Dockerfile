@@ -27,19 +27,7 @@ RUN apt update && \
         autoconf \
         libxft-dev \
         libxaw7-dev \
-        librsvg2-dev \
-        emacs
-
-# Create installer for latest org version, run this before compiling emacs from scratch,
-# as realpath might not find the emacs binary otherwise. This issue seems to happen when
-# building on github only.
-WORKDIR /emiac/org/src 
-RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git 
-WORKDIR /emiac/org/src/org-mode
-RUN make autoloads
-RUN make
-RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
-RUN cp emacs-org*.deb /emacs-org.deb
+        librsvg2-dev 
 
 WORKDIR /tmp
 
@@ -82,8 +70,19 @@ RUN ./autogen.sh && \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
-    checkinstall --install=no --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
+    checkinstall --install=yes --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
+
+# Create installer for latest org version, run this before compiling emacs from scratch,
+# as realpath might not find the emacs binary otherwise. This issue seems to happen when
+# building on github only.
+WORKDIR /emiac/org/src 
+RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git 
+WORKDIR /emiac/org/src/org-mode
+RUN make autoloads
+RUN make
+RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
+RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
 RUN git clone https://github.com/citation-style-language/styles /tmp/csl/styles && \
