@@ -36,7 +36,6 @@ RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git
 WORKDIR /emiac/org/src/org-mode
 RUN make autoloads
 RUN make
-# Hack in realpath as shell function, as the github build won't take the real one 
 RUN checkinstall -D --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
 RUN cp emacs-org*.deb /emacs-org.deb
 
