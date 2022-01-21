@@ -30,7 +30,9 @@ RUN apt update && \
         librsvg2-dev \
         emacs
 
-# Create installer for latest org version
+# Create installer for latest org version, run this before compiling emacs from scratch,
+# as realpath might not find the emacs binary otherwise. This issue seems to happen when
+# building on github only.
 WORKDIR /emiac/org/src 
 RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git 
 WORKDIR /emiac/org/src/org-mode
@@ -94,6 +96,7 @@ RUN git clone https://github.com/authsec/latex-styles.git /tmp/latex-styles
 RUN git clone https://github.com/domtronn/all-the-icons.el.git /tmp/all-the-icons
 
 FROM authsec/sphinx:latest
+LABEL maintainer="Jens Frey <jens.frey@coffeecrew.org>" Version="2022-01-21"
 
 # Setup environment used in docker build and scripts
 # running in the container itself.
@@ -181,9 +184,7 @@ USER root
 
 # install pdf-tools dependencies, so the server does not have to be built on 
 # initial startup of emiac
-RUN apt update && apt install -y elpa-pdf-tools-server firefox imagemagick
-
-#RUN mkdir ${EMIAC_HOME}/research && chmod -R 0755 ${EMIAC_HOME}/research && chown -R ${EMIAC_USER}:${EMIAC_GROUP} ${EMIAC_HOME}/research
+RUN apt update && apt install -y elpa-pdf-tools-server imagemagick
 
 # Setup turnkey SSH keys. If the user puts `emiac_ssh_key.pub` into his `.ssh` folder
 # emiac can issue commands (initially to an MacOS shell) to open URLs and other required 
