@@ -7,6 +7,9 @@ jobs:
   buildx:
     runs-on: ubuntu-latest
     steps:
+      - name: Remove cache
+        run:
+          rm -rf /tmp/.* *
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
