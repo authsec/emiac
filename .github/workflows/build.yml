@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Remove cache
         run:
-          ls -la && rm -rf /tmp/{.*,*}
+          ls -la /tmp
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
