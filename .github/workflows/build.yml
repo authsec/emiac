@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Remove cache
         run:
-          ls -la /tmp
+          ls -la /tmp; sudo rm -rf "/usr/local/share/boost" && sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
