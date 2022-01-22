@@ -77,4 +77,4 @@ then
 fi
 
 echo "[EMIAC] Starting emacs ..."
-emacs -q --load ${EMIAC_INIT_FILE} -T "EmIAC - Research Environment"
+${EMIAC_HOME}/local/bin/emacs -q --load ${EMIAC_INIT_FILE} -T "EmIAC - Research Environment"

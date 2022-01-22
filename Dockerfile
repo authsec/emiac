@@ -1,7 +1,11 @@
-FROM ubuntu:focal AS build-emacs
+FROM ubuntu:focal AS build
 
 ARG EMACS_VERSION="27.2"
 ENV EMACS_VERSION=$EMACS_VERSION
+
+# Version number as found after the tag e.g release_${ORG_VERSION}
+ARG ORG_VERSION="9.5.2"
+ENV ORG_VERSION=${ORG_VERSION}
 
 WORKDIR /tmp
 
@@ -42,14 +46,7 @@ WORKDIR /tmp/emacs
 # on Mac
 RUN ./autogen.sh && \
     ./configure \
-        --prefix=/usr \
-        --sysconfdir=/etc \
-        --localstatedir=/var \
-        --sharedstatedir=/var/lib \
-        --libexecdir=/usr/lib \
-        --localstatedir=/var/lib \
-        --infodir=/usr/share/info \
-        --mandir=/usr/share/man \
+        --prefix=/home/emiac/local \
         --with-modules \
         --with-file-notification=inotify \
         --with-mailutils \
@@ -73,45 +70,17 @@ RUN ./autogen.sh && \
     checkinstall --install=no --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
 
-# Try to get around the realpath issue
-FROM ubuntu:focal AS build
-
-COPY --from=build-emacs /emacs.deb /
-RUN dpkg -i /emacs.deb
-
-ARG DEBIAN_FRONTEND=noninteractive
-# Install build dependencies (can also be used to build with gtk3 instead of the [here preferred] lucid toolkit)
-RUN apt update && \
-    apt -y install \
-        curl \
-        checkinstall \
-        git \
-        texinfo \
-        install-info \
-        build-essential \
-        libgtk-3-dev \
-        libtiff5-dev \
-        libgif-dev \
-        libjpeg-dev \
-        libpng-dev \
-        libxpm-dev \
-        libncurses-dev \
-        libwebkit2gtk-4.0-dev \
-        libgnutls28-dev \
-        autoconf \
-        libxft-dev \
-        libxaw7-dev \
-        librsvg2-dev
-
 # Create installer for latest org version, run this before compiling emacs from scratch,
 # as realpath might not find the emacs binary otherwise. This issue seems to happen when
 # building on github only.
 WORKDIR /emiac/org/src 
 RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git 
 WORKDIR /emiac/org/src/org-mode
+RUN git checkout release_${ORG_VERSION}
+COPY local.mk /emiac/org/src/org-mode
 RUN make autoloads
 RUN make
-RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion="9.5" 
+RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
 RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
@@ -152,9 +121,9 @@ RUN dpkg -i /tmp/emacs.deb && \
     rm /tmp/emacs*.deb
 
 # Install csl styles and locales, so `#+cite_export: csl` works
-COPY --from=build /tmp/csl/styles/*.csl /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
-COPY --from=build /tmp/csl/locales/*.xml /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
-COPY --from=build /tmp/csl/locales/locales.json /usr/share/emacs/${EMACS_VERSION}/etc/org/csl/
+COPY --from=build /tmp/csl/styles/*.csl /home/emiac/local/share/emacs/${EMACS_VERSION}/etc/org/csl/
+COPY --from=build /tmp/csl/locales/*.xml /home/emiac/local/share/emacs/${EMACS_VERSION}/etc/org/csl/
+COPY --from=build /tmp/csl/locales/locales.json /home/emiac/local/share/emacs/${EMACS_VERSION}/etc/org/csl/
 
 # Install style directly into image. This can be overridden/extended by mounting an additional style
 # file directory into the container on /home/emiac/texmf/tex/latex/commonstuff
@@ -207,7 +176,7 @@ USER ${EMIAC_USER}
 
 # Download the full configuration into the container by starting emacs.
 # As this might throw errors, we signal ok with the last echo command
-RUN emacs -q --load ${EMIAC_INIT_FILE} --daemon --eval "(emacsql-sqlite-compile) (kill-emacs)"; echo "Signal OK"
+RUN ${EMIAC_HOME}/local/bin/emacs -q --load ${EMIAC_INIT_FILE} --daemon --eval "(emacsql-sqlite-compile) (kill-emacs)"; echo "Signal OK"
 
 
 USER root
