@@ -11,10 +11,11 @@ WORKDIR /tmp
 
 ARG DEBIAN_FRONTEND=noninteractive
 # Install build dependencies (can also be used to build with gtk3 instead of the [here preferred] lucid toolkit)
-RUN apt update && \
+RUN apt update && apt -y upgrade && \
     apt -y install \
         curl \
         checkinstall \
+        coreutils \
         git \
         texinfo \
         install-info \
@@ -67,7 +68,7 @@ RUN ./autogen.sh && \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
-    checkinstall --install=no --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
+    checkinstall --install=yes --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
 
 # Create installer for latest org version, run this before compiling emacs from scratch,
@@ -80,7 +81,9 @@ RUN git checkout release_${ORG_VERSION}
 COPY local.mk /emiac/org/src/org-mode
 RUN make autoloads
 RUN make
-RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
+RUN /usr/bin/realpath --help && /usr/bin/realpath --version
+# Fake realpath
+RUN export realpath() { echo "/home/emiac/local/bin/emacs-27.2"; } && checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
 RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
