@@ -81,10 +81,9 @@ RUN git checkout release_${ORG_VERSION}
 COPY local.mk /emiac/org/src/org-mode
 RUN make autoloads
 RUN make
-RUN /usr/bin/realpath --help && /usr/bin/realpath --version
+RUN make install
 ENV PATH=/home/emiac/local/bin:${PATH}
-# Fake realpath
-RUN /bin/bash -c 'realpath() { echo "/home/emiac/local/bin/emacs-27.2"; } && export -f realpath && checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}'
+RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
 RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
