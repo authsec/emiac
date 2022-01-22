@@ -83,7 +83,7 @@ RUN make autoloads
 RUN make
 RUN /usr/bin/realpath --help && /usr/bin/realpath --version
 # Fake realpath
-RUN export realpath() { echo "/home/emiac/local/bin/emacs-27.2"; } && checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
+RUN /bin/bash -c 'realpath() { echo "/home/emiac/local/bin/emacs-27.2"; } && export -f realpath && checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}'
 RUN cp emacs-org*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
