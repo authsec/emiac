@@ -1,4 +1,4 @@
-FROM ubuntu:focal AS build
+FROM ubuntu:focal AS build-emacs
 
 ARG EMACS_VERSION="27.2"
 ENV EMACS_VERSION=$EMACS_VERSION
@@ -70,11 +70,38 @@ RUN ./autogen.sh && \
         CFLAGS="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security" \
         CPPFLAGS="-Wdate-time -D_FORTIFY_SOURCE=2" LDFLAGS="-Wl,-Bsymbolic-functions -Wl,-z,relro" && \
     make && \
-    checkinstall --install=yes --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
+    checkinstall --install=no --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
 
 # Try to get around the realpath issue
-RUN rm -f /usr/bin/emacs && cp /usr/bin/emacs-27.2 /usr/bin/emacs
+FROM ubuntu:focal AS build
+
+COPY --from=build-emacs /emacs.deb /
+RUN dpkg -i /emacs.deb
+
+ARG DEBIAN_FRONTEND=noninteractive
+# Install build dependencies (can also be used to build with gtk3 instead of the [here preferred] lucid toolkit)
+RUN apt update && \
+    apt -y install \
+        curl \
+        checkinstall \
+        git \
+        texinfo \
+        install-info \
+        build-essential \
+        libgtk-3-dev \
+        libtiff5-dev \
+        libgif-dev \
+        libjpeg-dev \
+        libpng-dev \
+        libxpm-dev \
+        libncurses-dev \
+        libwebkit2gtk-4.0-dev \
+        libgnutls28-dev \
+        autoconf \
+        libxft-dev \
+        libxaw7-dev \
+        librsvg2-dev
 
 # Create installer for latest org version, run this before compiling emacs from scratch,
 # as realpath might not find the emacs binary otherwise. This issue seems to happen when
