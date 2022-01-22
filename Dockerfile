@@ -73,6 +73,9 @@ RUN ./autogen.sh && \
     checkinstall --install=yes --default --pkgname=emacs --pkgversion="${EMACS_VERSION}" && \
     cp emacs*.deb /emacs.deb
 
+# Try to get around the realpath issue
+RUN rm -f /usr/bin/emacs && cp /usr/bin/emacs-27.2 /usr/bin/emacs
+
 # Create installer for latest org version, run this before compiling emacs from scratch,
 # as realpath might not find the emacs binary otherwise. This issue seems to happen when
 # building on github only.
