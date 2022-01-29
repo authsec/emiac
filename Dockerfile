@@ -32,7 +32,8 @@ RUN apt update && apt -y upgrade && \
         autoconf \
         libxft-dev \
         libxaw7-dev \
-        librsvg2-dev 
+        librsvg2-dev \
+        ruby-dev
 
 WORKDIR /tmp
 
@@ -74,17 +75,21 @@ RUN ./autogen.sh && \
 # Create installer for latest org version, run this before compiling emacs from scratch,
 # as realpath might not find the emacs binary otherwise. This issue seems to happen when
 # building on github only.
-WORKDIR /emiac/org/src 
-RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git 
-WORKDIR /emiac/org/src/org-mode
-RUN git checkout release_${ORG_VERSION}
-COPY local.mk /emiac/org/src/org-mode
+WORKDIR /tmp
+RUN curl https://git.savannah.gnu.org/cgit/emacs/org-mode.git/snapshot/org-mode-release_${ORG_VERSION}.tar.gz | tar xz && \
+    mv org-mode* org-mode
+WORKDIR /tmp/org-mode
+COPY local.mk .
 RUN make autoloads
 RUN make
-RUN make install
 ENV PATH=/home/emiac/local/bin:${PATH}
-RUN checkinstall --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
-RUN cp emacs-org*.deb /emacs-org.deb
+RUN mkdir /emiac && make DESTDIR=/emiac install
+#RUN checkinstall -d 2 --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
+RUN gem install fpm
+RUN ls -la /emiac
+RUN fpm -s dir -t deb -C /emiac --name EmIAC --version 1.0.0 --iteration 1 --description "EMIAC" .
+RUN ls -la
+RUN cp emiac*.deb /emacs-org.deb
 
 # Get the citation-style-language styles, so we can use them with the new org-mode
 RUN git clone https://github.com/citation-style-language/styles /tmp/csl/styles && \
@@ -97,7 +102,7 @@ RUN git clone https://github.com/authsec/latex-styles.git /tmp/latex-styles
 RUN git clone https://github.com/domtronn/all-the-icons.el.git /tmp/all-the-icons
 
 FROM authsec/sphinx:latest
-LABEL maintainer="Jens Frey <jens.frey@coffeecrew.org>" Version="2022-01-21"
+LABEL maintainer="Jens Frey <jens.frey@coffeecrew.org>" Version="2022-01-29"
 
 # Setup environment used in docker build and scripts
 # running in the container itself.
@@ -120,8 +125,7 @@ COPY --from=build /emacs* /tmp
 RUN dpkg -i /tmp/emacs.deb && \
     # We force overwrite here, as we do want the new org-version to 
     # overwrite the old one
-    dpkg -i --force-overwrite /tmp/emacs-org.deb && \
-    rm /tmp/emacs*.deb
+    dpkg -i /tmp/emacs-org.deb 
 
 # Install csl styles and locales, so `#+cite_export: csl` works
 COPY --from=build /tmp/csl/styles/*.csl /home/emiac/local/share/emacs/${EMACS_VERSION}/etc/org/csl/
@@ -200,7 +204,7 @@ WORKDIR /usr/local/bin
 RUN curl -L https://github.com/hugoguru/dist-hugo/releases/download/v${HUGO_VERSION}/hugo-extended-${HUGO_VERSION}-linux-$(uname -m).tar.gz | tar xz 
 
 # Cleanup
-RUN rm -rf /tmp/*
+#RUN rm -rf /tmp/*
 
 # Run emacs as user in this container
 USER ${EMIAC_USER}

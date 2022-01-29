@@ -2,8 +2,6 @@
 ##  CHECK AND ADAPT THE FOLLOWING DEFINITIONS
 ##----------------------------------------------------------------------
 
-DESTDIR = /home/emiac/local/
-
 # Name of your emacs binary
 EMACS	= /home/emiac/local/bin/emacs
 
