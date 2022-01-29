@@ -1,10 +1,13 @@
+ARG ORG_VERSION="9.5.2"
+ARG EMACS_VERSION="27.2"
+
 FROM ubuntu:focal AS build
 
-ARG EMACS_VERSION="27.2"
+ARG EMACS_VERSION
 ENV EMACS_VERSION=$EMACS_VERSION
 
 # Version number as found after the tag e.g release_${ORG_VERSION}
-ARG ORG_VERSION="9.5.2"
+ARG ORG_VERSION
 ENV ORG_VERSION=${ORG_VERSION}
 
 WORKDIR /tmp
@@ -75,14 +78,16 @@ RUN ./autogen.sh && \
 # Create installer for latest org version, run this before compiling emacs from scratch,
 # as realpath might not find the emacs binary otherwise. This issue seems to happen when
 # building on github only.
+ENV PATH=/home/emiac/local/bin:${PATH}
 WORKDIR /tmp
-RUN curl https://git.savannah.gnu.org/cgit/emacs/org-mode.git/snapshot/org-mode-release_${ORG_VERSION}.tar.gz | tar xz && \
-    mv org-mode* org-mode
+#RUN curl https://git.savannah.gnu.org/cgit/emacs/org-mode.git/snapshot/org-mode-release_${ORG_VERSION}.tar.gz | tar xz && \
+#    mv org-mode* org-mode
+RUN git clone https://git.savannah.gnu.org/git/emacs/org-mode.git
 WORKDIR /tmp/org-mode
+RUN git checkout release_${ORG_VERSION}
 COPY local.mk .
 RUN make autoloads
 RUN make
-ENV PATH=/home/emiac/local/bin:${PATH}
 RUN mkdir /emiac && make DESTDIR=/emiac install
 #RUN checkinstall -d 2 --install=no --default --pkgname=emacs-org --pkgversion=${ORG_VERSION}
 RUN gem install fpm
@@ -104,6 +109,9 @@ RUN git clone https://github.com/domtronn/all-the-icons.el.git /tmp/all-the-icon
 FROM authsec/sphinx:latest
 LABEL maintainer="Jens Frey <jens.frey@coffeecrew.org>" Version="2022-01-29"
 
+ARG EMACS_VERSION
+ARG ORG_VERSION
+
 # Setup environment used in docker build and scripts
 # running in the container itself.
 ENV EMIAC_USER=emiac
@@ -120,12 +128,13 @@ ENV EMIAC_RESEARCH_DIR=${EMIAC_HOME}/research
 # of the mounted research folder.
 ENV EMIAC_EXTERNALIZE_CONFIGURATION=${EMIAC_EXTERNALIZE_CONFIGURATION:-0}
 ENV HUGO_VERSION=0.92.0
+ENV ORG_VERSION=${ORG_VERSION}
     
 COPY --from=build /emacs* /tmp
 RUN dpkg -i /tmp/emacs.deb && \
     # We force overwrite here, as we do want the new org-version to 
     # overwrite the old one
-    dpkg -i /tmp/emacs-org.deb 
+    dpkg -i --force-overwrite /tmp/emacs-org.deb 
 
 # Install csl styles and locales, so `#+cite_export: csl` works
 COPY --from=build /tmp/csl/styles/*.csl /home/emiac/local/share/emacs/${EMACS_VERSION}/etc/org/csl/
