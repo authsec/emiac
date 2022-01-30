@@ -213,7 +213,15 @@ WORKDIR /usr/local/bin
 RUN curl -L https://github.com/hugoguru/dist-hugo/releases/download/v${HUGO_VERSION}/hugo-extended-${HUGO_VERSION}-linux-$(uname -m).tar.gz | tar xz 
 
 # Cleanup
-#RUN rm -rf /tmp/*
+RUN rm -rf /tmp/* && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    find /var/lib/apt/lists -type f | xargs rm && \
+    find /var/log -type f -exec rm {} \; && \
+    rm -rf /usr/share/man/* && \
+    rm -rf /usr/share/doc/* && \
+    rm -f /var/log/alternatives.log /var/log/apt/* && \
+    rm -f /var/cache/debconf/*-old
 
 # Run emacs as user in this container
 USER ${EMIAC_USER}
