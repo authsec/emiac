@@ -434,7 +434,7 @@ If the new path's directories does not exist, create them."
 
 (setq org-latex-pdf-process
 	  (list
-	   "latexmk -interaction=nonstopmode -shell-escape -pdf -f %b.tex && latexmk -c -bibtex && rm -rf %b.run.xml %b.tex %b.bbl _minted-*; mkdir ~/research/export/pdf/$(/usr/bin/date -I)-%b; cp %b.pdf ~/research/export/pdf/$(/usr/bin/date -I)-%b"
+	   "latexmk -interaction=nonstopmode -shell-escape -pdf -f %b.tex && latexmk -c -bibtex && rm -rf %b.run.xml %b.tex %b.bbl _minted-* latex-*.aux latex-*.*_latexmk *.ist texput.* texfrag/; mkdir -p ~/research/export/pdf/$(/usr/bin/date -I)-%b; cp %b.pdf ~/research/export/pdf/$(/usr/bin/date -I)-%b"
 	   ))
 
 (setq org-latex-listings 'minted
@@ -447,6 +447,12 @@ If the new path's directories does not exist, create them."
 
 ;; use the newer biblatex
 (add-to-list 'org-latex-packages-alist '("backend=biber,sortlocale=de" "biblatex"))
+
+;; Load biblatex support for new org-mode 9.5
+(require 'oc-natbib)
+(require 'oc-biblatex)
+(require 'oc-csl)
+(require 'ox)
 
 ;;setup dialect to be biblatex as bibtex is quite a bit old
 (setq bibtex-dialect 'biblatex)
@@ -478,7 +484,7 @@ If the new path's directories does not exist, create them."
 (eval-after-load 'ox-latex
   '(add-to-list 'org-latex-classes
 		'("koma-report"
-		  "\\documentclass{scrreprt}"
+		  "\\documentclass[twoside]{scrreprt}"
 		  ("\\chapter{%s}" . "\\chapter*{%s}")
 		  ("\\section{%s}" . "\\section*{%s}")
 		  ("\\subsection{%s}" . "\\subsection*{%s}")
@@ -523,3 +529,6 @@ If the new path's directories does not exist, create them."
 (require 'ob-plantuml)
 (setq org-plantuml-jar-path "/usr/local/plantuml/plantuml.jar")
 (add-hook 'org-babel-after-execute-hook 'org-display-inline-images)
+
+(if (display-graphic-p)
+    (split-window-right))
