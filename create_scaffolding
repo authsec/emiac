@@ -8,7 +8,7 @@ DEFAULT_BIBLIOGRAPHY="${EMIAC_CONFIG_DEFAULTS_DIR}/references.bib"
 DEFAULT_INIT_EL="${EMIAC_CONFIG_DEFAULTS_DIR}/init.el"
 
 # Check if the script was already executed in the past and avoid running it again
-if [ -f "${EMIAC_CONFIG_DIR}/.initialized" ]
+if [ -f "${EMIAC_RESEARCH_DIR}/.initialized" ]
 then
     echo "${LOG_PREFIX} System already initialized, skipping ..."
     exit 1
@@ -37,5 +37,5 @@ cp ${DEFAULT_BIBLIOGRAPHY} ${EMIAC_RESEARCH_DIR}/bibliography/
 
 # For the next time signal that emiac is already initialized
 # If there is more than one date line, emiac has been initialized twice somehow
-echo $(date) >> ${EMIAC_CONFIG_DIR}/.initialized
+echo $(date) >> ${EMIAC_RESEARCH_DIR}/.initialized
 echo "${LOG_PREFIX} Initialized"
